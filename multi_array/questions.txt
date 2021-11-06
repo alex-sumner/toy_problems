@@ -1,0 +1,44 @@
+Multi Dimensional Array Access
+
+
+1. Look at the following fragment of a contract:
+
+    contract Story {
+
+        string[][3] x;
+
+    }
+
+Describe x as fully as you can. For instance what type is it, what type of data can be stored in it, how much data can it hold, and what type of storage will it use?
+
+2. Look at these two contracts:
+
+    contract Story1 {
+    
+        string[][3] private x = [["Once", "upon",  "a",       "time"],
+                                 ["in",   "a",     "kingdom", "far" ],
+                                 ["away", "there", "lived",   "a"   ]];
+    
+        function getWord(uint index1, uint index2) public view returns (string memory) {
+            return x[index1][index2];
+        }
+    
+    }
+    
+    contract Story2 {
+    
+        string[][3] private x = [["Once",    "upon",  "a"   ],
+                                 ["time",    "in",    "a"   ],
+                                 ["kingdom", "far",   "away"],
+                                 ["there",   "lived", "a"   ]];
+    
+        function getWord(uint index1, uint index2) public view returns (string memory) {
+            return x[index1][index2];
+        }
+    
+    }
+
+Are either of these contracts valid: will they compile, can they be deployed?
+
+
+For any that are valid, what value will getWord(2, 1) return? How much gas will you use calling it?
