@@ -1,0 +1,33 @@
+More on why a transparent proxy uses more gas than a universal one.
+
+There is always, even within a single contract, the possibility of writing two functions which have different signatures but the same function selector hash.  Here's an example:
+```
+// This contract will not compile, as both functions have the same selector
+contract Foo {
+    function collate_propagate_storage(bytes16) external { }
+    function burn(uint256) external { }
+}
+```
+If undetected, the end result is that calling one function can result in the other one being executed. Fortunately the Solidity compiler will detect this if it is within one contract. However if the upgradeTo function is on the proxy then it is possible for the implementation contract, or a later implementation contract, to have a function with the same selector. Avoiding this either requires explicitly checking for it, because the compiler can't spot it anymore, or some other precaution. If it happens and is not detected then an admin might unintentionally call the upgradeTo function when they were trying to call a completely different function on the implementation. The transparent proxy approach solves it by only allowing the admin to call the upgrade function, but not any other function on the implementation contract- whereas normal users can only call the implementation methods and never the upgrade. This means that even in the event of a function selector collision nobody can call the wrong method.
+
+A toy version might be like this:
+```
+// Sample code, do not use in production!
+contract TransparentAdminUpgradeableProxy {
+    address implementation;
+    address admin;
+    fallback() external payable {
+        require(msg.sender != admin);
+        implementation.delegatecall.value(msg.value)(msg.data);
+    }
+    function upgrade(address newImplementation) external {
+        if (msg.sender != admin) fallback();
+        implementation = newImplementation;
+    }
+}
+```
+It is this checking that adds extra gas. Every call requires a read from storage to get the admin adddress so that it can be compared with msg.sender. With the universal proxy approach all methods are on the implementation contract, so the compiler can detect function selector clashes. Now only the upgrade method needs to check if the caller is the admin, the vast majority of calls are to other methods and don't need to check if the caller is the admin address.
+
+For more on this topic, see https://blog.openzeppelin.com/the-state-of-smart-contract-upgrades/#universal-upgradeable-proxies
+
+For some example contracts see trivia 2 here: https://github.com/ajsantander/trivias

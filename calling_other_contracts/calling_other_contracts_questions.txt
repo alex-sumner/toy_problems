@@ -1,0 +1,20 @@
+1. Suppose you want your contract to make a call to another contract. Let's say there's a "run" method on the other contract that you want to call.
+
+	a. What are the different ways you can do this? 
+
+	b. Which ways work if you want your contract to revert if the call to run() reverts?
+
+	c. Which ways are better if you don't want your contract to revert even if the call to run() reverts?
+
+	d. What if you want the call to run() to execute with the same msg.sender that you were called with? (and what are the other consequences of this approach?)
+
+2. Suppose you have have an upgradeable contract. There is a proxy, which holds the state and won't change, There is also an implementation, which has the logic and may be upgraded (i.e. a new implementation may be deployed at some time, and then another after that, and so on).
+
+One approach, sometimes called a Transparent proxy, is to have the functions which control upgrading on the proxy contract. Maybe an "upgradeTo" function that takes the address of the new implementation. This would be protected, probably by a onlyOwner style modfifier. All other function calls will go to a fallback function which does a DELEGATECALL to the current implementation.
+
+Another approach, sometimes called a Universal proxy, is to have even the upgradeTo function on the implementation (again suitable protected so only the owner can cal it), the proxy has only state and a fallback function that passes everything on to the current implementation.
+
+	a. Can you state any advantages of one approach over the other in terms of gas efficiency?
+	
+	b. Can you state any advantages of one approach over the other in terms of vulnerability as the upgrades continue over time?
+
