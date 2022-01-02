@@ -1,14 +1,16 @@
 More on why a transparent proxy uses more gas than a universal one.
 
-There is always, even within a single contract, the possibility of writing two functions which have different signatures but the same function selector hash.  Here's an example:
+There is always, even within a single contract, the possibility of writing two functions which have different signatures but the same initial 4 bytes in their function selector hash. Here's an example:
 ```
-// This contract will not compile, as both functions have the same selector
-contract Foo {
-    function collate_propagate_storage(bytes16) external { }
-    function burn(uint256) external { }
-}
+collate_propagate_storage(bytes16)
+burn(uint256)
 ```
-If undetected, the end result is that calling one function can result in the other one being executed. Fortunately the Solidity compiler will detect this if it is within one contract. However if the upgradeTo function is on the proxy then it is possible for the implementation contract, or a later implementation contract, to have a function with the same selector. Avoiding this either requires explicitly checking for it, because the compiler can't spot it anymore, or some other precaution. If it happens and is not detected then an admin might unintentionally call the upgradeTo function when they were trying to call a completely different function on the implementation. The transparent proxy approach solves it by only allowing the admin to call the upgrade function, but not any other function on the implementation contract- whereas normal users can only call the implementation methods and never the upgrade. This means that even in the event of a function selector collision nobody can call the wrong method.
+Here's another:
+```
+withdraw(uint256)
+OwnerTransferV7b711143(uint256)
+```
+If undetected, the end result is that calling one function can result in the other one being executed. Fortunately the Solidity compiler will detect this if it is within one contract. However if the upgradeTo function is on the proxy then it is possible for the implementation contract, or a later implementation contract, to have a function with the same selector. There are 2^32 possible function signatures, which is just under 4.3 billion, so the chances of this happening by accident are low on any given occasion. However leaving a vulnerability to them in a pattern for upgradeable contracts would be asking for trouble, with each use of the pattern presenting new opportunities for the problem to occur.  If it happens and is not detected then an admin might unintentionally call the upgradeTo function when they were trying to call a completely different function on the implementation. The transparent proxy approach prevents this by only allowing the admin to call the upgrade function, but not any other function on the implementation contract - whereas normal users can only call the implementation methods and never the upgrade. This means that even in the event of a function selector collision nobody can call the wrong method.
 
 A toy version might be like this:
 ```
