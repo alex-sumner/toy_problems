@@ -1,50 +1,58 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
+
 contract OptimizedContract {
     
-    uint a;
-    int256 b;
-    uint128 f;
-    uint128 e;
-    uint128 h;
-    uint64 c;
-    bytes32 d;
-    bytes32 g;
+    uint public totalHeadCount;
+    uint public totalBudget;
 
-    struct person {
-        bytes32[] family;
-        string name;
-        string country;
-        bytes32 id;
-        uint8 age;
+    struct Department {
+        uint headCount;
+        uint budget;
     }
+        
+    uint constant NUM_DEPTS = 20;
+        
+    Department[NUM_DEPTS + 1] departments;
 
-    function f1 (uint x) public returns (bool) {
-        uint tempA;
-        int tempB;
-        for ( uint i = 0 ; i < x ; i++) {
-            tempA += i; 
-            tempB -= int(i); 
+    function setHeadCount(uint deptNum, uint newCount) external {
+        require(deptNum > 0 && deptNum <= NUM_DEPTS, "invalid deptNum");
+        Department storage department = departments[deptNum];
+        uint oldCount = department.headCount;
+        if (newCount != oldCount) {
+            department.headCount = newCount;
+            totalHeadCount = newCount > oldCount ?
+                totalHeadCount + (newCount - oldCount) :
+                totalHeadCount - (oldCount - newCount);
         }
-        a += tempA;
-        b += tempB;
-        return (a > 50 || b > 50) ? true : false;
     }
 
-    function f2 (uint x) public returns (bool) {
-        a += x;
-        b -= int(x);
-
-        return (a > 50 || b > 50) ? true : false;
+    function setBudget(uint deptNum, uint newBudget) external {
+        require(deptNum > 0 && deptNum <= NUM_DEPTS, "invalid deptNum");
+        Department storage department = departments[deptNum];
+        uint oldBudget = department.budget;
+        if (newBudget != oldBudget) {
+            department.budget = newBudget;
+            totalBudget = newBudget > oldBudget ?
+                totalBudget + (newBudget - oldBudget) :
+                totalBudget - (oldBudget - newBudget);
+        }
     }
 
-    function setA (uint x) external {
-        a = x;
-    }
-
-    function setB (int x) external {
-        b = x;
+    function perHeadRateExceedsDeptMean(uint deptNum, uint rate) public view returns (bool)
+    {
+        require(deptNum > 0 && deptNum <= NUM_DEPTS, "invalid deptNum");
+        Department storage department = departments[deptNum];
+        return department.headCount > 0 && rate > ( department.budget / department.headCount );
     }
     
-    function greaterThan50 ( uint x ) public returns (bool) {
-        return (f2(x) || f1(x)) ? true : false;
+    function perHeadRateExceedsOverallMean(uint rate) public view returns (bool)
+    {
+        return totalHeadCount > 0 && rate > ( totalBudget / totalHeadCount );
     }
+    
+    function perHeadRateExceedsDeptOrOverallMean(uint deptNum, uint rate) external view returns (bool) {
+        return perHeadRateExceedsDeptMean(deptNum, rate) || perHeadRateExceedsOverallMean(rate);
+    }
+
 }
