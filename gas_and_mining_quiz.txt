@@ -1,8 +1,8 @@
-1. Executing the same contract code twice will use the same quantity of gas each time.
+1. Executing the same contract code twice with the same inputs will use the same quantity of gas each time.
 
 False, this depends on contract state as well. For example, writing something to storage is much more expensive (20000) if you are writing to a new position than if you are changing an existing value (5000).
 
-2. Executing the same contract code twice with the same initial state will cost the same quantity of gas each time.
+2. Executing the same contract code twice with the same inputs and initial state will cost the same quantity of gas each time.
 
 False, the gas costs of opcodes are sometimes changed. Remember this is why calling transfer() is no longer recommended.
 
